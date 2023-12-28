@@ -1,0 +1,127 @@
+/* #1- How many copies of the book titled "The Lost Tribe" are owned by the library branch whose name is "Sharpstown"? */
+
+CREATE or alter PROCEDURE COPIES
+AS
+BEGIN
+	SELECT SUM(BC.book_copies_No_Of_Copies) AS TOATAL_COPIES
+	FROM tbl_book_copies BC
+	JOIN tbl_book B
+	ON BC.book_copies_BookID = B.book_BookID
+	JOIN tbl_library_branch LB 
+	ON BC.book_copies_BranchID = LB.library_branch_BranchID
+	WHERE B.book_Title = 'The Lost Tribe' 
+	and LB.library_branch_BranchName = 'sharpstown'
+end
+
+exec COPIES
+
+
+/* #2- How many copies of the book titled "The Lost Tribe" are owned by each library branch? */
+
+CREATE or alter PROCEDURE COPIES
+AS
+BEGIN
+	SELECT library_branch_BranchName AS BRANCH_NAME, book_copies_No_Of_Copies AS COPIES_COUNT 
+	FROM tbl_book B
+	FULL JOIN tbl_book_copies BC 
+	ON BC.book_copies_BookID = B.book_BookID
+	FULL JOIN tbl_library_branch LB
+	ON LB.library_branch_BranchID = BC.book_copies_BranchID
+	WHERE book_Title = 'The lost tribe'
+	GROUP BY library_branch_BranchName,book_copies_No_Of_Copies
+	
+end
+
+exec COPIES
+
+
+/* #3- Retrieve the names of all borrowers who do not have any books checked out. */
+
+CREATE OR ALTER PROCEDURE NAMES 
+AS
+BEGIN
+	SELECT borrower_BorrowerName 
+	FROM tbl_borrower TB
+	Left JOIN tbl_book_loans BL
+	ON TB.borrower_CardNo = BL.book_loans_CardNo
+	where bl.book_loans_CardNo is null
+
+END
+
+EXEC NAMES
+
+/* #4- For each book that is loaned out from the "Sharpstown" branch and whose DueDate is today, retrieve the book title, the borrower's name, and the borrower's address.  */
+
+CREATE PROCEDURE SP 
+AS
+BEGIN
+
+	SELECT book_Title
+	FROM tbl_book B
+	JOIN tbl_book_loans BL
+	ON BL.book_loans_BookID = B.book_BookID
+	JOIN tbl_borrower BR
+	ON BR.borrower_CardNo = BL.book_loans_CardNo
+	JOIN tbl_library_branch LB 
+	ON LB.library_branch_BranchID = BL.book_loans_BranchID
+	WHERE library_branch_BranchName = 'SHARPSTOWN'
+	AND book_loans_DueDate = GETDATE()
+END 
+
+EXEC SP
+
+/* #5- For each library branch, retrieve the branch name and the total number of books loaned out from that branch.  */
+
+CREATE OR ALTER PROCEDURE BRANCHNAME
+AS
+BEGIN
+
+	SELECT library_branch_BranchName,COUNT(book_loans_BookID) 
+	FROM tbl_library_branch LB
+	JOIN tbl_book_loans bl
+	ON bl.book_loans_BranchID = LB.library_branch_BranchID
+	GROUP BY library_branch_BranchName
+
+END
+EXEC BRANCHNAME
+
+
+/* #6- Retrieve the names, addresses, and number of books checked out for all borrowers who have more than five books checked out. */
+
+CREATE PROCEDURE ALL_BORROWERS
+AS
+BEGIN
+
+	SELECT borrower_BorrowerName,borrower_BorrowerAddress,COUNT(book_loans_bookid)
+	FROM tbl_borrower B
+	FULL JOIN tbl_book_loans L
+	ON B.borrower_CardNo=L.book_loans_CardNo
+	group by borrower_BorrowerName,borrower_BorrowerAddress
+	having COUNT(book_loans_bookid) > 5
+END 
+
+EXEC ALL_BORROWERS
+
+
+/* #7- For each book authored by "Stephen King", retrieve the title and the number of copies owned by the library branch whose name is "Central".*/
+
+CREATE OR ALTER PROCEDURE TITLE
+AS
+BEGIN
+
+SELECT book_Title ,sum(book_copies_no_of_copies)
+FROM tbl_book B
+JOIN tbl_book_authors BU
+ON B.book_BookID = BU.book_authors_BookID
+JOIN tbl_book_copies BC 
+ON BC.book_copies_BookID = B.book_BookID
+JOIN tbl_library_branch LB
+ON
+LB.library_branch_BranchID = BC.book_copies_BranchID
+WHERE library_branch_BranchName = 'CENTRAL' 
+AND book_authors_AuthorName = 'stephen king'
+group by book_Title
+
+END
+
+EXEC TITLE
